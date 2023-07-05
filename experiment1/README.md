@@ -29,3 +29,4 @@ _:e_sk_13_1 <urn:odrl-compiler:is> <urn:odrl-compiler:Satisfied>.
 ```
 
 As experiment, change some fields in the `data.ttl` (e.g. change  `ex:login` into `ex:bob`) and check that the access will not be granted. 
+
