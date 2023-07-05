@@ -1,0 +1,142 @@
+@prefix : <urn:odrl-compiler:> .
+@prefix odrl: <http://www.w3.org/ns/odrl/2/> .
+@prefix log: <http://www.w3.org/2000/10/swap/log#> .
+@prefix string: <http://www.w3.org/2000/10/swap/string#> .
+@prefix list: <http://www.w3.org/2000/10/swap/list#> .
+@prefix math: <http://www.w3.org/2000/10/swap/math#> .
+@prefix time: <http://www.w3.org/2000/10/swap/time#> .
+
+{
+    # Gather all the constraints on the policy
+    ?Result :constraint ?Constraint .
+
+    ?Constraint 
+        a :Constraint ;
+        odrl:leftOperand ?LO ;
+        odrl:operator ?O ;
+        odrl:rightOperand ?RO .
+
+    # Resolve the operands
+    (
+        { ?LO log:rawType log:Other . }
+        { ?Some ?LO ?LOV . }
+        { ?LO log:equalTo ?LOV . }
+    ) log:ifThenElseIn _:x .
+
+    (
+        { ?RO log:rawType log:Other . }
+        { ?Some ?RO ?ROV . }
+        { ?RO log:equalTo ?ROV . }
+    ) log:ifThenElseIn _:y .
+
+    # Test the constraint 
+    ( 
+      # if 
+      { ?LOV ?O ?ROV . } 
+      # then
+      { ?Validity log:equalTo :Satisfied . } 
+      # else 
+      { ?Validity log:equalTo :NotSatisfied . }
+    ) log:ifThenElseIn _:z.
+}
+=>
+{
+    ?Constraint :is ?Validity .
+} .
+
+# odrl:dateTime
+{
+    ?X odrl:dateTime ?Y .
+}
+<=
+{
+    "" time:localTime ?Y .
+} .
+
+# odrl:lt
+{
+    ?X odrl:lt ?Y .
+} 
+<=
+{
+    ?X math:lessThan ?Y .
+} .
+
+# odrl:gt
+{
+    ?X odrl:gt ?Y .
+}
+<=
+{
+    ?X math:greaterThan ?Y .
+} .
+
+# odrl:lteq
+{
+    ?X odrl:lteq ?Y 
+}
+<=
+{
+    ?X math:equalTo ?Y .
+} .
+
+{
+    ?X odrl:lteq ?Y 
+}
+<=
+{
+    ?X math:lessThan ?Y .
+} .
+
+# odrl:gteq
+{
+    ?X odrl:gteq ?Y 
+}
+<=
+{
+    ?X math:equalTo ?Y .
+} .
+
+{
+    ?X odrl:gteq ?Y 
+}
+<=
+{
+    ?X math:greaterThan ?Y .
+} .
+
+# odrl:eq
+{
+    ?X odrl:eq ?Y .
+}
+<=
+{
+    ?X log:equalTo ?Y .
+} .
+
+# ordl:neq
+{
+    ?X odrl:neq ?Y .
+}
+<=
+{
+    ?X log:notEqualTo ?Y .
+} .
+
+# odrl:hasPart 
+{
+    ?X odrl:hasPart ?Y .
+}
+<=
+{
+    ?X list:member ?Y .
+} .
+
+# odrl:isPartOf
+{
+    ?X odrl:isPartOf ?Y .
+}
+<=
+{
+    ?Y odrl:hasPart ?X .
+} .

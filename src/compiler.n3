@@ -1,0 +1,127 @@
+@prefix : <urn:odrl-compiler:> .
+@prefix log: <http://www.w3.org/2000/10/swap/log#>.
+@prefix list: <http://www.w3.org/2000/10/swap/list#>.
+@prefix graph: <http://www.w3.org/2000/10/swap/graph#>.
+@prefix odrl: <http://www.w3.org/ns/odrl/2/> .
+@prefix odrlp: <http://example.org/odrl:profile:01/> .
+@prefix ex: <http://example.org/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+
+# ODRL compiler
+{
+  # Match a policy
+  ?Policy 
+    a odrl:Set ;
+    odrl:permission ?Permission .
+
+  # Find the assignee, action and target 
+  ?Permission
+    odrl:assignee ?Assignee ;
+    odrl:action ?Action ;
+    odrl:target ?Target .
+
+  # Find the sub-graph that defines the assignee 
+  ?Assignee :graphList ?AssigneeList .
+  ?AssigneeGraph graph:list ?AssigneeList .
+  ?AssigneeGraph :mainSubject ?TheAssignee .
+
+  # Find the sub-grag that defined the target
+  ?Target :graphList ?TargetList .
+  ?TargetGraph graph:list ?TargetList .
+  ?TargetGraph :mainSubject ?TheTarget .
+
+  # Create the RDF Surface
+  ( 
+    { 
+      # Find a Session in the data
+      _:Session 
+        a odrl:Session ;
+        ex:login ?TheAssignee .
+
+      # Match the policy
+      _:Policy log:equalTo ?Policy .
+      _:Assignee log:equalTo ?Assignee .
+    }
+    ?AssigneeGraph ?TargetGraph
+    { 
+      ?TheAssignee log:rawType log:Other .
+      ?TheTarget log:rawType log:Other .
+      () log:onNegativeSurface {
+        :Result 
+          :policy _:Policy ;
+          odrl:assignee ?TheAssignee ;
+          odrl:action ?Action ;
+          odrl:target ?TheTarget .
+      } .
+    } 
+  ) graph:union ?RDFSurface .
+
+  # Find the blank node graffiti for the RDF Surface
+  ?RDFSurface :blankNodeList ?Graffiti .
+}
+=>
+{
+  ?Graffiti log:onNegativeSurface ?RDFSurface .
+} . 
+
+{
+  # Match a policy
+  ?Policy 
+    a odrl:Set ;
+    odrl:permission ?Permission .
+  
+  # Match 
+  ?Permission
+    odrl:constraint ?Constraint .
+  
+  ?Constraint :graphList ?ConstraintList .
+  ?ConstraintGraph graph:list ?ConstraintList .
+
+  ?ConstraintGraph log:includes {
+    ?Some 
+      odrl:leftOperand ?Left ;
+      odrl:operator ?Operator ;
+      odrl:rightOperand ?Right 
+  } .
+
+  # Create RDF Surface
+  (
+    {
+      # Match a result
+      _:Result :policy ?Policy .
+    }
+    {
+      () log:onNegativeSurface {
+        :Result :constraint [
+          a :Constraint;
+          odrl:leftOperand ?Left ;
+          odrl:operator ?Operator ;
+          odrl:rightOperand ?Right
+        ] .
+      } .
+    }
+  ) graph:union ?RDFSurface .
+
+  # Find the blank node graffiti for the RDF Surface
+  ?RDFSurface :blankNodeList ?Graffiti . 
+}
+=>
+{
+  ?Graffiti log:onNegativeSurface ?RDFSurface .
+} .
+
+# Find the main subject (first triple subject node)
+#  $A+ :mainSubject $B-
+# where:
+#  - A : a node
+#  - B : a graph term
+{
+  ?A :mainSubject ?B .
+}
+<=
+{
+  ?A graph:list ?L .
+  ?L list:first ?H .
+  ?H log:equalTo { ?B ?P ?O } .
+} .
+
