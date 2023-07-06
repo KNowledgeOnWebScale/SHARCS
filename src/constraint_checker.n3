@@ -28,20 +28,20 @@
         { ?Some ?RO ?ROV . }
         { ?RO log:equalTo ?ROV . }
     ) log:ifThenElseIn _:y .
-
-    # Test the constraint 
-    ( 
-      # if 
-      { ?LOV ?O ?ROV . } 
-      # then
-      { ?Validity log:equalTo :Satisfied . } 
-      # else 
-      { ?Validity log:equalTo :NotSatisfied . }
-    ) log:ifThenElseIn _:z.
 }
 =>
 {
-    ?Constraint :is ?Validity .
+    { ?LOV ?O ?ROV } 
+    => 
+    { ?Constraint :is :Satisfied } .
+
+    { ?SCOPE log:notIncludes { ?LOV ?O ?ROV } } 
+    =>
+    {
+        () log:onNegativeSurface {
+            ?Constraint :is :Satisfied .
+        } .
+    }
 } .
 
 # odrl:dateTime
